@@ -1,4 +1,4 @@
-# Subreddit Post Downloader 🚀
+# Subreddit Post Downloader
 
 A Python script to archive posts from any public subreddit using Reddit's API via PRAW.
 
