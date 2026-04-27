@@ -1,14 +1,10 @@
-"""Data models for post representation."""
-
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 
 @dataclass
 class Post:
-    """Represents a Reddit post."""
-
     id: str
     title: str
     author: str
@@ -20,11 +16,10 @@ class Post:
     permalink: str
     flair: Optional[str] = None
     subreddit: Optional[str] = None
-    retrieved_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    retrieved_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     @classmethod
     def from_praw_post(cls, post) -> "Post":
-        """Create a Post from a PRAW submission object."""
         return cls(
             id=post.id,
             title=post.title,
@@ -36,23 +31,16 @@ class Post:
             num_comments=post.num_comments,
             permalink=post.permalink,
             flair=post.link_flair_text,
-            subreddit=getattr(post, "subreddit", None) or "",
+            subreddit=str(post.subreddit),
         )
 
     def to_dict(self) -> dict:
-        """Convert to dictionary for serialization."""
         return asdict(self)
 
 
 @dataclass
 class FetchResult:
-    """Result of a fetch operation."""
-
     posts: list[Post]
     subreddit: str
     sort_type: str
-    fetched_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-
-    def to_dict(self) -> dict:
-        """Convert to dictionary for serialization."""
-        return asdict(self)
+    fetched_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())

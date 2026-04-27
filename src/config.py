@@ -1,5 +1,3 @@
-"""Configuration management for the application."""
-
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,17 +11,14 @@ except ImportError:
 
 @dataclass
 class Config:
-    """Application configuration."""
-
     client_id: str
     client_secret: str
     user_agent: str
     post_limit: int = 100
-    output_dir: Optional[str] = None
+    output_dir: Optional[Path] = None
 
     @classmethod
     def from_env(cls, env_path: Optional[Path] = None) -> "Config":
-        """Load configuration from environment variables."""
         if load_dotenv and env_path:
             load_dotenv(env_path)
         elif load_dotenv:
@@ -32,8 +27,8 @@ class Config:
         client_id = os.getenv("REDDIT_CLIENT_ID") or ""
         client_secret = os.getenv("REDDIT_CLIENT_SECRET") or ""
         user_agent = os.getenv("REDDIT_USER_AGENT") or ""
-        post_limit = os.getenv("POST_LIMIT", "100")
-        output_dir = os.getenv("OUTPUT_DIR") or None
+        post_limit_str = os.getenv("POST_LIMIT", "100")
+        output_dir_str = os.getenv("OUTPUT_DIR") or None
 
         if not client_id or not client_secret or not user_agent:
             raise ConfigurationError(
@@ -42,25 +37,21 @@ class Config:
                 "Copy .env.example to .env and fill in your values."
             )
 
+        try:
+            post_limit = int(post_limit_str)
+        except ValueError:
+            raise ConfigurationError(
+                f"POST_LIMIT must be an integer, got '{post_limit_str}'"
+            )
+
         return cls(
             client_id=client_id,
             client_secret=client_secret,
             user_agent=user_agent,
-            post_limit=int(post_limit),
-            output_dir=output_dir,
+            post_limit=post_limit,
+            output_dir=Path(output_dir_str) if output_dir_str else None,
         )
 
 
 class ConfigurationError(Exception):
-    """Raised when configuration is invalid or missing."""
     pass
-
-
-def get_env_path() -> Path:
-    """Get the path to the .env file."""
-    return Path.cwd() / ".env"
-
-
-def get_env_example_path() -> Path:
-    """Get the path to the .env.example file."""
-    return Path.cwd() / ".env.example"
